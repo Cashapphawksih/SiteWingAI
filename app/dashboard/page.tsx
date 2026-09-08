@@ -64,6 +64,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <BrandMark />
           <div className="flex items-center gap-4">
             <span className="hidden max-w-64 truncate text-xs text-muted sm:block">{user.email ?? "Signed in"}</span>
+            <Link href="/billing" className="text-sm font-semibold underline decoration-line underline-offset-4 hover:decoration-foreground">Billing</Link>
             <form action={logoutAction}><button type="submit" className="border border-line px-4 py-2 text-xs font-semibold hover:border-foreground">Log out</button></form>
           </div>
         </div>

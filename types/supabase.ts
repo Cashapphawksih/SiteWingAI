@@ -108,12 +108,73 @@ export interface Database {
         Update: { hostname?: string; status?: "pending" | "verifying" | "active" | "error"; verified_at?: string | null; provider_synced_at?: string | null; last_error?: string | null };
         Relationships: [];
       };
+      billing_accounts: {
+        Row: {
+          user_id: string;
+          stripe_customer_id: string;
+          stripe_subscription_id: string | null;
+          stripe_price_id: string | null;
+          status: "none" | "active" | "canceled" | "incomplete" | "incomplete_expired" | "past_due" | "paused" | "trialing" | "unpaid";
+          current_period_start: string | null;
+          current_period_end: string | null;
+          cancel_at_period_end: boolean;
+          last_stripe_event_created_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          stripe_customer_id: string;
+          stripe_subscription_id?: string | null;
+          stripe_price_id?: string | null;
+          status?: "none" | "active" | "canceled" | "incomplete" | "incomplete_expired" | "past_due" | "paused" | "trialing" | "unpaid";
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          last_stripe_event_created_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          stripe_customer_id?: string;
+          stripe_subscription_id?: string | null;
+          stripe_price_id?: string | null;
+          status?: "none" | "active" | "canceled" | "incomplete" | "incomplete_expired" | "past_due" | "paused" | "trialing" | "unpaid";
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          last_stripe_event_created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      stripe_webhook_events: {
+        Row: { event_id: string; event_type: string; stripe_created_at: string; processed_at: string };
+        Insert: { event_id: string; event_type: string; stripe_created_at: string; processed_at?: string };
+        Update: Record<never, never>;
+        Relationships: [];
+      };
     };
     Views: Record<never, never>;
     Functions: {
       publish_project: {
         Args: { p_project_id: string; p_public_slug_base: string; p_published_config: Json; p_config_hash: string; p_storage_paths: string[] };
         Returns: { public_slug: string; published_at: string }[];
+      };
+      apply_stripe_subscription_event: {
+        Args: {
+          p_event_id: string;
+          p_event_type: string;
+          p_event_created_at: string;
+          p_user_id: string;
+          p_stripe_customer_id: string;
+          p_stripe_subscription_id: string;
+          p_stripe_price_id: string | null;
+          p_status: string;
+          p_current_period_start: string | null;
+          p_current_period_end: string | null;
+          p_cancel_at_period_end: boolean;
+        };
+        Returns: boolean;
       };
     };
     Enums: Record<never, never>;
