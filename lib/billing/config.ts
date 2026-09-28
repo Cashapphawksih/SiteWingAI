@@ -1,9 +1,10 @@
 import "server-only";
 
-export interface StripeRuntimeConfig {
-  priceId: string;
-  secretKey: string;
-  webhookSecret: string;
+export type StripeWebhookSecretSlot = "primary" | "secondary";
+
+export interface StripeWebhookSecret {
+  secret: string;
+  slot: StripeWebhookSecretSlot;
 }
 
 function requiredEnv(name: "STRIPE_SECRET_KEY" | "STRIPE_WEBHOOK_SECRET" | "STRIPE_SUBSCRIPTION_PRICE_ID") {
@@ -16,8 +17,13 @@ export function getStripeSecretKey() {
   return requiredEnv("STRIPE_SECRET_KEY");
 }
 
-export function getStripeWebhookSecret() {
-  return requiredEnv("STRIPE_WEBHOOK_SECRET");
+export function getStripeWebhookSecrets(): StripeWebhookSecret[] {
+  const secrets: StripeWebhookSecret[] = [
+    { secret: requiredEnv("STRIPE_WEBHOOK_SECRET"), slot: "primary" },
+  ];
+  const secondary = process.env.STRIPE_WEBHOOK_SECRET_SECONDARY?.trim();
+  if (secondary) secrets.push({ secret: secondary, slot: "secondary" });
+  return secrets;
 }
 
 export function getStripePriceId() {
