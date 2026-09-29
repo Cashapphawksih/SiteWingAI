@@ -1,16 +1,18 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { logoutAction } from "@/app/(auth)/actions";
 import { createProjectAction, renameProjectAction } from "@/app/dashboard/actions";
-import { BrandMark } from "@/components/brand-mark";
 import { DeleteProjectControl } from "@/components/dashboard/delete-project-control";
-import { requireUser } from "@/lib/supabase/auth";
-import { createClient } from "@/lib/supabase/server";
+import { AppHeader, AppNotice, PageIntro, StatusBadge, TextLink } from "@/components/ui/app-ui";
 import { parseWebsiteConfigInput } from "@/lib/ai/website-config-schema";
+import { sitewingHostname } from "@/lib/domains/hostname";
 import { prepareWebsiteConfigForPersistence } from "@/lib/projects/persistence";
 import { hashWebsiteConfig } from "@/lib/publishing/config";
-import { sitewingHostname } from "@/lib/domains/hostname";
+import { requireUser } from "@/lib/supabase/auth";
+import { createClient } from "@/lib/supabase/server";
+import type { WebsiteConfig } from "@/types/website";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Dashboard" };
@@ -27,96 +29,88 @@ function updatedLabel(value: string) {
   return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
+function previewStyle(config: WebsiteConfig | null): CSSProperties {
+  return config ? {
+    "--project-background": config.theme.backgroundColor,
+    "--project-text": config.theme.textColor,
+    "--project-accent": config.theme.primaryColor,
+  } as CSSProperties : {};
+}
+
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const user = await requireUser("/dashboard");
   const supabase = await createClient();
-  const { data: projects, error } = await supabase
-    .from("projects")
-    .select("id, name, website_config, updated_at")
-    .eq("user_id", user.id)
-    .order("updated_at", { ascending: false });
+  const { data: projects, error } = await supabase.from("projects").select("id, name, website_config, updated_at").eq("user_id", user.id).order("updated_at", { ascending: false });
   const params = await searchParams;
   const actionError = typeof params.error === "string" ? errorMessages[params.error] : null;
-  const { data: publications, error: publicationsError } = await supabase
-    .from("published_sites")
-    .select("project_id, public_slug, is_active, config_hash")
-    .eq("user_id", user.id);
+  const { data: publications, error: publicationsError } = await supabase.from("published_sites").select("project_id, public_slug, is_active, config_hash").eq("user_id", user.id);
   const publicationByProject = new Map((publications ?? []).map((publication) => [publication.project_id, publication]));
   const { data: domains, error: domainsError } = await supabase.from("domains").select("project_id, hostname, status, type").eq("user_id", user.id);
   const customDomainsByProject = new Map<string, NonNullable<typeof domains>>();
   for (const domain of domains ?? []) if (domain.type === "custom") customDomainsByProject.set(domain.project_id, [...(customDomainsByProject.get(domain.project_id) ?? []), domain]);
+
   const projectRows = await Promise.all((projects ?? []).map(async (project) => {
     const publication = publicationByProject.get(project.id);
+    let parsedConfig: WebsiteConfig | null = null;
     let draftHash: string | null = null;
     if (project.website_config) {
-      try { draftHash = await hashWebsiteConfig(prepareWebsiteConfigForPersistence(parseWebsiteConfigInput(project.website_config)).config); } catch { /* Builder reports invalid saved configuration. */ }
+      try {
+        parsedConfig = prepareWebsiteConfigForPersistence(parseWebsiteConfigInput(project.website_config)).config;
+        draftHash = await hashWebsiteConfig(parsedConfig);
+      } catch { /* Builder reports invalid saved configuration. */ }
     }
-    const publicationLabel = publication?.is_active
-      ? draftHash === publication.config_hash ? "Published" : "Changes not published"
-      : "Draft";
-    return { ...project, publication, publicationLabel, customDomains: customDomainsByProject.get(project.id) ?? [] };
+    const publicationLabel = publication?.is_active ? draftHash === publication.config_hash ? "Published" : "Changes not published" : "Draft";
+    return { ...project, publication, publicationLabel, parsedConfig, customDomains: customDomainsByProject.get(project.id) ?? [] };
   }));
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-line bg-background">
-        <div className="mx-auto flex min-h-18 w-full max-w-7xl items-center justify-between gap-5 px-5 sm:min-h-20 sm:px-8 lg:px-12">
-          <BrandMark />
-          <div className="flex items-center gap-4">
-            <span className="hidden max-w-64 truncate text-xs text-muted sm:block">{user.email ?? "Signed in"}</span>
-            <Link href="/billing" className="text-sm font-semibold underline decoration-line underline-offset-4 hover:decoration-foreground">Billing</Link>
-            <form action={logoutAction}><button type="submit" className="border border-line px-4 py-2 text-xs font-semibold hover:border-foreground">Log out</button></form>
-          </div>
-        </div>
-      </header>
+      <AppHeader
+        label="Website workspace"
+        actions={<><span className="hidden max-w-56 truncate text-xs text-muted md:block">{user.email ?? "Signed in"}</span><TextLink href="/billing">Billing</TextLink><form action={logoutAction}><button type="submit" className="min-h-9 border border-line px-4 text-xs font-bold hover:border-foreground hover:bg-white">Log out</button></form></>}
+      />
 
-      <main className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-12 lg:py-20">
-        <div className="flex flex-col gap-7 border-b border-line pb-10 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Your workspace</p>
-            <h1 className="mt-4 text-4xl font-medium tracking-[-0.045em] sm:text-5xl">Website projects</h1>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-muted">Open a saved project or create a new private workspace.</p>
-          </div>
-          <form action={createProjectAction}>
-            <button type="submit" className="min-h-12 bg-foreground px-6 text-sm font-semibold text-background transition-colors hover:bg-accent">Create project</button>
-          </form>
-        </div>
+      <main className="mx-auto w-full max-w-[1480px] px-5 py-10 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
+        <PageIntro
+          eyebrow="Your websites"
+          title="Build, refine, and publish from one place."
+          description="Every project is a private working website with its own pages, conversation, media, and publishing state."
+          action={<form action={createProjectAction}><button type="submit" className="inline-flex min-h-12 items-center justify-center bg-foreground px-6 text-sm font-bold text-background hover:bg-accent">Create new website <span className="ml-3" aria-hidden="true">+</span></button></form>}
+        />
 
-        {actionError ? <p className="mt-6 border-l-2 border-red-700 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">{actionError}</p> : null}
+        {actionError ? <div className="mt-6"><AppNotice tone="error">{actionError}</AppNotice></div> : null}
         {error || publicationsError || domainsError ? (
-          <section className="mt-10 border border-line bg-surface p-8" role="alert"><h2 className="text-xl font-medium">Projects are temporarily unavailable.</h2><p className="mt-3 text-sm text-muted">Refresh the page or try again shortly.</p></section>
+          <section className="mt-10 max-w-2xl"><AppNotice tone="error"><strong className="block">Projects are temporarily unavailable.</strong> Refresh the page or try again shortly.</AppNotice></section>
         ) : projectRows.length ? (
-          <div className="mt-10 grid gap-px border border-line bg-line md:grid-cols-2 xl:grid-cols-3">
-            {projectRows.map((project) => (
-              <article key={project.id} className="flex min-h-72 flex-col bg-background p-6 sm:p-7">
-                <div className="flex items-center justify-between gap-4 text-xs">
-                  <span className="font-semibold uppercase tracking-[0.12em] text-accent">{project.publicationLabel}</span>
-                  <span className="text-muted">{project.website_config ? "Website created" : "Not generated"}</span>
-                </div>
-                <h2 className="mt-10 text-2xl font-medium tracking-[-0.03em]">{project.name}</h2>
-                <p className="mt-3 text-xs leading-5 text-muted">Updated {updatedLabel(project.updated_at)}</p>
-                {project.publication?.is_active ? <p className="mt-3 truncate text-xs text-muted">{sitewingHostname(project.publication.public_slug)}</p> : null}
-                {project.customDomains.length ? <p className="mt-1 truncate text-xs text-muted">{project.customDomains[0].hostname} · {project.customDomains[0].status === "active" ? "Connected" : "Pending DNS"}</p> : null}
-                <div className="mt-auto flex items-center justify-between gap-4 border-t border-line pt-5">
-                  <div className="flex items-center gap-4">
-                    <Link href={`/build/${project.id}`} className="text-sm font-semibold underline decoration-line underline-offset-4 hover:decoration-foreground">Open project</Link>
-                    {project.publication?.is_active ? <a href={`https://${sitewingHostname(project.publication.public_slug)}`} target="_blank" rel="noreferrer" className="text-sm text-accent underline underline-offset-4">Open site</a> : null}
-                  </div>
-                  <DeleteProjectControl projectId={project.id} projectName={project.name} />
-                </div>
-                <form action={renameProjectAction} className="mt-5 flex border border-line bg-white focus-within:border-foreground">
-                  <input type="hidden" name="projectId" value={project.id} />
-                  <label className="sr-only" htmlFor={`rename-${project.id}`}>Rename {project.name}</label>
-                  <input id={`rename-${project.id}`} name="name" defaultValue={project.name} maxLength={80} required className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs outline-none" />
-                  <button type="submit" className="border-l border-line px-3 text-xs font-semibold hover:bg-surface">Rename</button>
-                </form>
-              </article>
-            ))}
-          </div>
+          <section className="mt-10" aria-labelledby="recent-sites-heading">
+            <div className="mb-5 flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted">Recent work</p><h2 id="recent-sites-heading" className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Sites in progress</h2></div><span className="font-mono text-[10px] text-muted">{projectRows.length.toString().padStart(2, "0")} projects</span></div>
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {projectRows.map((project) => {
+                const preview = project.parsedConfig;
+                const domain = project.customDomains[0];
+                return (
+                  <article key={project.id} className="group overflow-hidden border border-line bg-white transition-transform duration-200 hover:-translate-y-1 hover:border-foreground">
+                    <Link href={`/build/${project.id}`} className="block focus-visible:outline-offset-[-3px]">
+                      <div className="relative grid min-h-56 content-end overflow-hidden bg-[#22231f] p-6" style={previewStyle(preview)}>
+                        {preview ? <><div className="absolute inset-0 bg-[var(--project-background)]" /><div className="absolute inset-x-0 top-0 h-12 border-b border-[color:var(--project-text)]/15" /><div className="relative max-w-[85%] text-[var(--project-text)]"><p className="text-[8px] font-bold uppercase tracking-[0.18em] text-[var(--project-accent)]">{preview.business.location}</p><h3 className="mt-3 text-3xl font-semibold leading-[0.95] tracking-[-0.055em]">{preview.business.name}</h3><p className="mt-3 line-clamp-2 text-[10px] leading-4 opacity-65">{preview.business.tagline}</p></div></> : <div className="relative"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-signal">New website</p><h3 className="mt-4 max-w-xs text-3xl font-semibold leading-[0.98] tracking-[-0.05em] text-white">Your first version starts with a clear brief.</h3></div>}
+                        <span className="absolute bottom-5 right-5 grid size-8 place-items-center border border-white/20 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true">↗</span>
+                      </div>
+                    </Link>
+                    <div className="p-5 sm:p-6">
+                      <div className="flex items-center justify-between gap-3"><StatusBadge tone={project.publication?.is_active ? project.publicationLabel === "Published" ? "live" : "pending" : "neutral"}>{project.publicationLabel}</StatusBadge><span className="text-[10px] text-muted">Updated {updatedLabel(project.updated_at)}</span></div>
+                      <div className="mt-5 flex items-start justify-between gap-4"><div className="min-w-0"><h3 className="truncate text-xl font-semibold tracking-[-0.035em]">{project.name}</h3>{project.publication?.is_active ? <p className="mt-1 truncate text-xs text-muted">{domain?.hostname ?? sitewingHostname(project.publication.public_slug)}</p> : <p className="mt-1 text-xs text-muted">{preview ? `${preview.pages.length} page${preview.pages.length === 1 ? "" : "s"}` : "Waiting for first generation"}</p>}</div><DeleteProjectControl projectId={project.id} projectName={project.name} /></div>
+                      <div className="mt-6 flex items-center gap-5 border-t border-line pt-4"><Link href={`/build/${project.id}`} className="text-sm font-bold underline decoration-line underline-offset-4 hover:decoration-foreground">Edit website</Link>{project.publication?.is_active ? <a href={`https://${sitewingHostname(project.publication.public_slug)}`} target="_blank" rel="noreferrer" className="text-sm text-accent underline underline-offset-4">View live</a> : null}</div>
+                      <form action={renameProjectAction} className="mt-4 flex border border-line bg-background focus-within:border-foreground"><input type="hidden" name="projectId" value={project.id} /><label className="sr-only" htmlFor={`rename-${project.id}`}>Rename {project.name}</label><input id={`rename-${project.id}`} name="name" defaultValue={project.name} maxLength={80} required className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs outline-none" /><button type="submit" className="border-l border-line px-3 text-[10px] font-bold uppercase tracking-[0.08em] hover:bg-surface">Rename</button></form>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
         ) : (
-          <section className="mt-10 flex min-h-72 flex-col items-start justify-between border border-line bg-surface p-8 sm:p-10">
-            <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">No projects yet</p><h2 className="mt-4 text-3xl font-medium tracking-[-0.04em]">Start with one clear brief.</h2><p className="mt-4 max-w-md text-sm leading-7 text-muted">Your generated site, pages, edits, and conversation will be saved to this account.</p></div>
-            <form action={createProjectAction} className="mt-10"><button type="submit" className="min-h-11 border border-foreground px-5 text-sm font-semibold hover:bg-foreground hover:text-background">Create your first project</button></form>
+          <section className="mt-10 grid min-h-96 border border-line bg-white md:grid-cols-[1.2fr_0.8fr]">
+            <div className="flex flex-col justify-between p-8 sm:p-12"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">No websites yet</p><h2 className="mt-5 max-w-xl text-4xl font-semibold leading-[1] tracking-[-0.05em] sm:text-5xl">Start with the business. SiteWing will shape the site.</h2><p className="mt-5 max-w-md text-sm leading-7 text-muted">Your pages, edits, media, and conversation stay saved in one private workspace.</p></div><form action={createProjectAction} className="mt-10"><button type="submit" className="min-h-12 bg-foreground px-6 text-sm font-bold text-background hover:bg-accent">Create your first website</button></form></div>
+            <div className="hidden bg-dark p-8 text-white md:flex md:flex-col md:justify-between"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-signal">A simple way to begin</p><div className="space-y-7">{["Describe the business", "Review the first version", "Refine and publish"].map((item, index) => <div key={item} className="border-t border-white/15 pt-4"><span className="font-mono text-[9px] text-white/35">0{index + 1}</span><p className="mt-2 text-sm font-semibold">{item}</p></div>)}</div></div>
           </section>
         )}
       </main>

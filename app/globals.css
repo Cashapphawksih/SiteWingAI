@@ -1,22 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f1ea;
-  --foreground: #171816;
-  --surface: #ebe7de;
-  --muted: #64665f;
-  --line: #d3cec3;
+  --background: #f3f2ed;
+  --foreground: #111210;
+  --surface: #e9e8e1;
+  --surface-strong: #deddd4;
+  --muted: #686a63;
+  --line: #d1d0c7;
   --accent: #315d4d;
+  --signal: #dfff67;
+  --dark: #151613;
+  --dark-muted: #a7a99f;
+  --danger: #a23d32;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-accent: var(--accent);
-  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --color-signal: var(--signal);
+  --color-dark: var(--dark);
+  --color-dark-muted: var(--dark-muted);
+  --color-danger: var(--danger);
+  --font-sans: Arial, "Helvetica Neue", Helvetica, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
@@ -32,7 +42,8 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {
@@ -43,4 +54,31 @@ body {
 a,
 button {
   -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

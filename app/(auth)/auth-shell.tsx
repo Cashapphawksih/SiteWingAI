@@ -13,18 +13,22 @@ interface AuthShellProps {
 
 export function AuthShell({ alternateHref, alternateLabel, children, description, eyebrow, title }: AuthShellProps) {
   return (
-    <main className="grid min-h-screen bg-background text-foreground lg:grid-cols-[minmax(320px,0.8fr)_minmax(480px,1.2fr)]">
-      <section className="flex min-h-64 flex-col justify-between border-b border-line bg-surface p-6 sm:p-10 lg:min-h-screen lg:border-r lg:border-b-0 lg:p-14">
-        <BrandMark />
-        <div className="mt-20 max-w-lg lg:mt-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">{eyebrow}</p>
-          <h1 className="mt-5 text-balance text-4xl font-medium leading-[1.02] tracking-[-0.045em] sm:text-5xl">{title}</h1>
-          <p className="mt-6 max-w-md text-sm leading-7 text-muted">{description}</p>
+    <main className="grid min-h-screen bg-background text-foreground lg:grid-cols-[minmax(360px,0.92fr)_minmax(480px,1.08fr)]">
+      <section className="relative flex min-h-80 flex-col justify-between overflow-hidden border-b border-white/10 bg-dark p-6 text-white sm:p-10 lg:min-h-screen lg:border-r lg:border-b-0 lg:p-14">
+        <div className="absolute -right-28 top-1/3 size-80 rounded-full border border-white/8" aria-hidden="true" />
+        <BrandMark tone="inverse" />
+        <div className="relative mt-20 max-w-xl lg:mt-0">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-signal">{eyebrow}</p>
+          <h1 className="mt-6 text-balance text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl">{title}</h1>
+          <p className="mt-7 max-w-md text-sm leading-7 text-white/55">{description}</p>
+          <div className="mt-12 hidden max-w-md border-t border-white/15 lg:block">
+            {["Generate complete sites", "Refine by conversation", "Edit the details directly"].map((item, index) => <div key={item} className="flex items-center justify-between border-b border-white/15 py-4 text-xs text-white/70"><span>{item}</span><span className="font-mono text-[9px] text-white/30">0{index + 1}</span></div>)}
+          </div>
         </div>
-        <p className="mt-14 text-xs text-muted">SiteWing AI · Website creation, with intention.</p>
+        <p className="relative mt-14 text-[10px] uppercase tracking-[0.15em] text-white/35">Private workspace · Explicit publishing</p>
       </section>
-      <section className="flex items-center justify-center px-5 py-14 sm:px-10">
-        <div className="w-full max-w-md">
+      <section className="flex items-center justify-center px-5 py-14 sm:px-10 lg:px-16">
+        <div className="w-full max-w-[420px]">
           {children}
           <p className="mt-8 text-center text-sm text-muted">
             {alternateLabel.split("?")[0]}?{" "}

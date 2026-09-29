@@ -718,7 +718,7 @@ export function PreviewWorkspace({
               <path d="m12.5 4.5-5.5 5.5 5.5 5.5" />
             </svg>
           </Link>
-          <BrandMark />
+          <BrandMark tone="inverse" />
           <span className={styles.topBarDivider} aria-hidden="true" />
           <div className={styles.projectIdentity}>
             <strong>{projectName}</strong>
@@ -856,8 +856,8 @@ export function PreviewWorkspace({
               S
             </div>
             <div>
-              <h1>AI web designer</h1>
-              <p>Describe what you want. Refine it as you go.</p>
+              <h1>SiteWing assistant</h1>
+              <p>Describe, refine, and direct the site.</p>
             </div>
           </div>
 

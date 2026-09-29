@@ -24,17 +24,18 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
   return (
     <AuthShell alternateHref="/signup" alternateLabel="New to SiteWing?Create an account" description="Return to your saved websites and continue from the latest validated version." eyebrow="Welcome back" title="Continue building with clarity.">
-      <div className="mb-8">
-        <h2 className="text-2xl font-medium tracking-[-0.03em]">Log in</h2>
+      <div className="mb-9 border-b border-line pb-7">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">Your workspace</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em]">Log in</h2>
         <p className="mt-2 text-sm text-muted">Use the email and password associated with your account.</p>
       </div>
-      {errorMessages[errorKey] ? <p className="mb-5 border-l-2 border-red-700 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">{errorMessages[errorKey]}</p> : null}
-      {message ? <p className="mb-5 border-l-2 border-accent bg-surface px-4 py-3 text-sm" role="status">{message}</p> : null}
+      {errorMessages[errorKey] ? <p className="mb-5 border-l-2 border-danger bg-white px-4 py-3 text-sm text-[#71251f]" role="alert">{errorMessages[errorKey]}</p> : null}
+      {message ? <p className="mb-5 border-l-2 border-accent bg-white px-4 py-3 text-sm" role="status">{message}</p> : null}
       <form action={loginAction} className="grid gap-5">
         <input type="hidden" name="next" value={nextPath} />
-        <label className="grid gap-2 text-sm font-semibold">Email<input className="h-12 border border-line bg-white px-4 font-normal outline-none focus:border-foreground" type="email" name="email" autoComplete="email" required maxLength={254} /></label>
-        <label className="grid gap-2 text-sm font-semibold">Password<input className="h-12 border border-line bg-white px-4 font-normal outline-none focus:border-foreground" type="password" name="password" autoComplete="current-password" required minLength={8} maxLength={72} /></label>
-        <button className="mt-2 min-h-12 bg-foreground px-5 text-sm font-semibold text-background transition-colors hover:bg-accent disabled:opacity-50" type="submit" disabled={!isSupabaseConfigured()}>Log in</button>
+        <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em]">Email<input className="h-13 border border-line bg-white px-4 text-sm font-normal normal-case tracking-normal outline-none transition-colors focus:border-foreground" type="email" name="email" autoComplete="email" required maxLength={254} /></label>
+        <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em]">Password<input className="h-13 border border-line bg-white px-4 text-sm font-normal normal-case tracking-normal outline-none transition-colors focus:border-foreground" type="password" name="password" autoComplete="current-password" required minLength={8} maxLength={72} /></label>
+        <button className="mt-2 min-h-13 bg-foreground px-5 text-sm font-bold text-background transition-colors hover:bg-accent disabled:opacity-50" type="submit" disabled={!isSupabaseConfigured()}>Enter workspace</button>
       </form>
     </AuthShell>
   );

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { logoutAction } from "@/app/(auth)/actions";
-import { BrandMark } from "@/components/brand-mark";
+import { AppHeader, AppNotice, PageIntro, StatusBadge, TextLink } from "@/components/ui/app-ui";
 import { isStripeCheckoutConfigured } from "@/lib/billing/config";
 import { requireUser } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -13,23 +12,8 @@ export const metadata: Metadata = { title: "Billing" };
 
 const ACTIVE_STATUSES = new Set<BillingStatus>(["active", "trialing"]);
 const SUBSCRIBABLE_STATUSES = new Set<BillingStatus>(["none", "canceled", "incomplete_expired"]);
-const statusLabels: Record<BillingStatus, string> = {
-  none: "No subscription",
-  active: "Active",
-  canceled: "Canceled",
-  incomplete: "Payment incomplete",
-  incomplete_expired: "Incomplete subscription expired",
-  past_due: "Past due",
-  paused: "Paused",
-  trialing: "Trialing",
-  unpaid: "Unpaid",
-};
-
-const errorMessages: Record<string, string> = {
-  checkout: "Stripe Checkout is temporarily unavailable. Please try again.",
-  existing_subscription: "Manage your existing subscription through the billing portal.",
-  portal: "The Stripe billing portal is temporarily unavailable. Please try again.",
-};
+const statusLabels: Record<BillingStatus, string> = { none: "No subscription", active: "Active", canceled: "Canceled", incomplete: "Payment incomplete", incomplete_expired: "Incomplete subscription expired", past_due: "Past due", paused: "Paused", trialing: "Trialing", unpaid: "Unpaid" };
+const errorMessages: Record<string, string> = { checkout: "Stripe Checkout is temporarily unavailable. Please try again.", existing_subscription: "Manage your existing subscription through the billing portal.", portal: "The Stripe billing portal is temporarily unavailable. Please try again." };
 
 function dateLabel(value: string | null) {
   return value ? new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(new Date(value)) : null;
@@ -38,11 +22,7 @@ function dateLabel(value: string | null) {
 export default async function BillingPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const user = await requireUser("/billing");
   const supabase = await createClient();
-  const { data: billing, error } = await supabase
-    .from("billing_accounts")
-    .select("stripe_customer_id, stripe_subscription_id, stripe_price_id, status, current_period_start, current_period_end, cancel_at_period_end")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const { data: billing, error } = await supabase.from("billing_accounts").select("stripe_customer_id, stripe_subscription_id, stripe_price_id, status, current_period_start, current_period_end, cancel_at_period_end").eq("user_id", user.id).maybeSingle();
   const params = await searchParams;
   const checkout = typeof params.checkout === "string" ? params.checkout : null;
   const actionError = typeof params.error === "string" ? errorMessages[params.error] : null;
@@ -53,46 +33,31 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-line bg-background">
-        <div className="mx-auto flex min-h-18 w-full max-w-7xl items-center justify-between gap-5 px-5 sm:min-h-20 sm:px-8 lg:px-12">
-          <BrandMark />
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-sm font-semibold underline decoration-line underline-offset-4 hover:decoration-foreground">Dashboard</Link>
-            <form action={logoutAction}><button type="submit" className="border border-line px-4 py-2 text-xs font-semibold hover:border-foreground">Log out</button></form>
-          </div>
+      <AppHeader label="Account" actions={<><TextLink href="/dashboard">Dashboard</TextLink><form action={logoutAction}><button type="submit" className="min-h-9 border border-line px-4 text-xs font-bold hover:border-foreground hover:bg-white">Log out</button></form></>} />
+      <main className="mx-auto w-full max-w-[1120px] px-5 py-10 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
+        <PageIntro eyebrow="Account and plan" title="Billing without the clutter." description="Review the state of your SiteWing subscription or continue to Stripe for secure payment management." />
+        <div className="mt-6 space-y-3">
+          {checkout === "success" ? <AppNotice tone="success">Checkout completed. Stripe is confirming your subscription through its secure webhook.</AppNotice> : null}
+          {checkout === "canceled" ? <AppNotice>Checkout was canceled. No billing changes were made.</AppNotice> : null}
+          {actionError ? <AppNotice tone="error">{actionError}</AppNotice> : null}
         </div>
-      </header>
-      <main className="mx-auto w-full max-w-4xl px-5 py-12 sm:px-8 sm:py-16 lg:py-20">
-        <div className="border-b border-line pb-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Account settings</p>
-          <h1 className="mt-4 text-4xl font-medium tracking-[-0.045em] sm:text-5xl">Billing</h1>
-          <p className="mt-4 max-w-xl text-sm leading-7 text-muted">Review your subscription or continue to Stripe to manage billing securely.</p>
-        </div>
-        {checkout === "success" ? <p className="mt-6 border-l-2 border-accent bg-surface px-4 py-3 text-sm" role="status">Checkout completed. Stripe is confirming your subscription through its secure webhook.</p> : null}
-        {checkout === "canceled" ? <p className="mt-6 border-l-2 border-line bg-surface px-4 py-3 text-sm" role="status">Checkout was canceled. No billing changes were made.</p> : null}
-        {actionError ? <p className="mt-6 border-l-2 border-red-700 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">{actionError}</p> : null}
         {error ? (
-          <section className="mt-10 border border-line bg-surface p-8" role="alert"><h2 className="text-xl font-medium">Billing is temporarily unavailable.</h2><p className="mt-3 text-sm text-muted">Refresh the page or try again shortly.</p></section>
+          <section className="mt-10 max-w-2xl"><AppNotice tone="error"><strong className="block">Billing is temporarily unavailable.</strong> Refresh the page or try again shortly.</AppNotice></section>
         ) : (
-          <section className="mt-10 border border-line bg-surface p-6 sm:p-8" aria-labelledby="subscription-heading">
-            <div className="flex flex-col gap-7 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">Current plan</p>
-                <h2 id="subscription-heading" className="mt-3 text-2xl font-medium tracking-[-0.03em]">{active ? "SiteWing subscription" : "Free"}</h2>
-                <p className="mt-3 text-sm text-muted">Status: {statusLabels[status] ?? "Unknown"}</p>
-                {periodEnd ? <p className="mt-2 text-sm text-muted">{billing?.cancel_at_period_end ? "Access ends" : "Current period ends"} {periodEnd}</p> : null}
-              </div>
-              <div className="flex flex-col items-stretch gap-3 sm:items-end">
-                {billing?.stripe_customer_id ? (
-                  <form action="/api/billing/portal" method="post"><button type="submit" className="min-h-11 w-full bg-foreground px-5 text-sm font-semibold text-background hover:bg-accent">Manage billing</button></form>
-                ) : null}
-                {canSubscribe ? (
-                  isStripeCheckoutConfigured() ? (
-                    <form action="/api/billing/checkout" method="post"><button type="submit" className="min-h-11 w-full border border-foreground px-5 text-sm font-semibold hover:bg-foreground hover:text-background">Subscribe</button></form>
-                  ) : <p className="max-w-xs text-right text-xs leading-5 text-muted">Subscription checkout is not configured yet.</p>
-                ) : null}
-              </div>
+          <section className="mt-10 grid overflow-hidden border border-line bg-white lg:grid-cols-[1.2fr_0.8fr]" aria-labelledby="subscription-heading">
+            <div className="p-7 sm:p-10">
+              <div className="flex flex-wrap items-center justify-between gap-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">Current plan</p><StatusBadge tone={active ? "live" : "neutral"}>{statusLabels[status] ?? "Unknown"}</StatusBadge></div>
+              <h2 id="subscription-heading" className="mt-12 text-4xl font-semibold tracking-[-0.055em] sm:text-5xl">{active ? "SiteWing subscription" : "Free workspace"}</h2>
+              <p className="mt-5 max-w-xl text-sm leading-7 text-muted">{active ? "Your paid SiteWing access is synchronized through Stripe." : "You can keep working in your private workspace and subscribe when you are ready."}</p>
+              {periodEnd ? <div className="mt-9 border-t border-line pt-5"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted">{billing?.cancel_at_period_end ? "Access ends" : "Current period ends"}</p><p className="mt-2 text-lg font-semibold">{periodEnd}</p></div> : null}
             </div>
+            <aside className="flex flex-col justify-between bg-dark p-7 text-white sm:p-10">
+              <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-signal">Secure billing</p><h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em]">Plan changes happen in Stripe.</h3><p className="mt-4 text-sm leading-7 text-white/55">Payment details never pass through the SiteWing interface.</p></div>
+              <div className="mt-12 grid gap-3">
+                {billing?.stripe_customer_id ? <form action="/api/billing/portal" method="post"><button type="submit" className="min-h-12 w-full bg-signal px-5 text-sm font-bold text-dark hover:bg-white">Manage billing</button></form> : null}
+                {canSubscribe ? isStripeCheckoutConfigured() ? <form action="/api/billing/checkout" method="post"><button type="submit" className="min-h-12 w-full border border-white/30 px-5 text-sm font-bold hover:border-white hover:bg-white hover:text-dark">Subscribe with Stripe</button></form> : <p className="text-xs leading-5 text-white/45">Subscription checkout is not configured yet.</p> : null}
+              </div>
+            </aside>
           </section>
         )}
       </main>
