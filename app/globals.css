@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f3f2ed;
+  --background: #f5f4ef;
   --foreground: #111210;
-  --surface: #e9e8e1;
-  --surface-strong: #deddd4;
-  --muted: #686a63;
-  --line: #d1d0c7;
-  --accent: #315d4d;
-  --signal: #dfff67;
-  --dark: #151613;
-  --dark-muted: #a7a99f;
+  --surface: #ebeae4;
+  --surface-strong: #dfded6;
+  --muted: #62645e;
+  --line: #d8d6ce;
+  --accent: #255f4b;
+  --signal: #dafe68;
+  --dark: #121310;
+  --dark-muted: #9ea198;
   --danger: #a23d32;
 }
 
@@ -26,7 +26,7 @@
   --color-dark: var(--dark);
   --color-dark-muted: var(--dark-muted);
   --color-danger: var(--danger);
-  --font-sans: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
@@ -42,7 +42,8 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: -0.01em;
   text-rendering: optimizeLegibility;
 }
 
@@ -56,6 +57,19 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+a,
+button,
+input,
+select,
+textarea {
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, opacity 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+button:active:not(:disabled),
+a:active {
+  transform: translateY(1px);
+}
+
 button,
 input,
 select,
@@ -64,9 +78,17 @@ textarea {
 }
 
 :focus-visible {
-  outline: 2px solid var(--foreground);
-  outline-offset: 3px;
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.motion-rise { animation: rise-in 600ms cubic-bezier(.22, 1, .36, 1) both; }
+.motion-rise-delayed { animation: rise-in 700ms 100ms cubic-bezier(.22, 1, .36, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
   html {

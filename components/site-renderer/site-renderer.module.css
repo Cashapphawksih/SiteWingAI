@@ -139,11 +139,12 @@
 .site[data-sitewing-editing="true"] [data-sitewing-editable="true"]:hover,
 .site[data-sitewing-editing="true"] [data-sitewing-editable="true"]:focus-visible {
   outline-color: color-mix(in srgb, var(--website-primary) 72%, transparent);
+  background: color-mix(in srgb, var(--website-primary) 4%, transparent);
 }
 
 .site[data-sitewing-editing="true"] [data-sitewing-editable="true"][data-sitewing-selected="true"] {
   outline-color: var(--website-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--website-background) 72%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--website-background) 82%, transparent), 0 0 0 4px color-mix(in srgb, var(--website-primary) 32%, transparent);
 }
 
 .site[data-sitewing-editing="true"] [data-sitewing-key^="section:"] {

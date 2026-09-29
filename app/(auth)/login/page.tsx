@@ -31,11 +31,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </div>
       {errorMessages[errorKey] ? <p className="mb-5 border-l-2 border-danger bg-white px-4 py-3 text-sm text-[#71251f]" role="alert">{errorMessages[errorKey]}</p> : null}
       {message ? <p className="mb-5 border-l-2 border-accent bg-white px-4 py-3 text-sm" role="status">{message}</p> : null}
-      <form action={loginAction} className="grid gap-5">
+      <form action={loginAction} className="grid gap-6">
         <input type="hidden" name="next" value={nextPath} />
-        <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em]">Email<input className="h-13 border border-line bg-white px-4 text-sm font-normal normal-case tracking-normal outline-none transition-colors focus:border-foreground" type="email" name="email" autoComplete="email" required maxLength={254} /></label>
-        <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em]">Password<input className="h-13 border border-line bg-white px-4 text-sm font-normal normal-case tracking-normal outline-none transition-colors focus:border-foreground" type="password" name="password" autoComplete="current-password" required minLength={8} maxLength={72} /></label>
-        <button className="mt-2 min-h-13 bg-foreground px-5 text-sm font-bold text-background transition-colors hover:bg-accent disabled:opacity-50" type="submit" disabled={!isSupabaseConfigured()}>Enter workspace</button>
+        <label className="grid gap-2 text-[10px] font-bold uppercase tracking-[0.12em]">Email<input className="h-14 rounded-[4px] border border-line bg-white px-4 text-sm font-normal normal-case tracking-normal shadow-[0_5px_20px_rgba(16,17,15,.035)] outline-none focus:border-accent focus:ring-3 focus:ring-accent/10" type="email" name="email" autoComplete="email" required maxLength={254} /></label>
+        <label className="grid gap-2 text-[10px] font-bold uppercase tracking-[0.12em]">Password<input className="h-14 rounded-[4px] border border-line bg-white px-4 text-sm font-normal normal-case tracking-normal shadow-[0_5px_20px_rgba(16,17,15,.035)] outline-none focus:border-accent focus:ring-3 focus:ring-accent/10" type="password" name="password" autoComplete="current-password" required minLength={8} maxLength={72} /></label>
+        <button className="mt-1 min-h-14 rounded-[4px] bg-foreground px-5 text-sm font-bold text-background shadow-[0_12px_30px_rgba(16,17,15,.12)] hover:-translate-y-0.5 hover:bg-accent disabled:opacity-50" type="submit" disabled={!isSupabaseConfigured()}>Enter workspace <span className="ml-2" aria-hidden="true">→</span></button>
       </form>
     </AuthShell>
   );

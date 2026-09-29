@@ -28,11 +28,11 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
         <p className="mt-2 text-sm text-muted">Email and password authentication for your private SiteWing workspace.</p>
       </div>
       {errorMessages[errorKey] ? <p className="mb-5 border-l-2 border-danger bg-white px-4 py-3 text-sm text-[#71251f]" role="alert">{errorMessages[errorKey]}</p> : null}
-      <form action={signupAction} className="grid gap-5">
-        <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em]">Email<input className="h-13 border border-line bg-white px-4 text-sm font-normal normal-case tracking-normal outline-none transition-colors focus:border-foreground" type="email" name="email" autoComplete="email" required maxLength={254} /></label>
-        <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em]">Password<input className="h-13 border border-line bg-white px-4 text-sm font-normal normal-case tracking-normal outline-none transition-colors focus:border-foreground" type="password" name="password" autoComplete="new-password" required minLength={8} maxLength={72} aria-describedby="password-guidance" /></label>
+      <form action={signupAction} className="grid gap-6">
+        <label className="grid gap-2 text-[10px] font-bold uppercase tracking-[0.12em]">Email<input className="h-14 rounded-[4px] border border-line bg-white px-4 text-sm font-normal normal-case tracking-normal shadow-[0_5px_20px_rgba(16,17,15,.035)] outline-none focus:border-accent focus:ring-3 focus:ring-accent/10" type="email" name="email" autoComplete="email" required maxLength={254} /></label>
+        <label className="grid gap-2 text-[10px] font-bold uppercase tracking-[0.12em]">Password<input className="h-14 rounded-[4px] border border-line bg-white px-4 text-sm font-normal normal-case tracking-normal shadow-[0_5px_20px_rgba(16,17,15,.035)] outline-none focus:border-accent focus:ring-3 focus:ring-accent/10" type="password" name="password" autoComplete="new-password" required minLength={8} maxLength={72} aria-describedby="password-guidance" /></label>
         <p id="password-guidance" className="-mt-2 text-xs leading-5 text-muted">Use 8–72 characters. A password manager is recommended.</p>
-        <button className="mt-2 min-h-13 bg-foreground px-5 text-sm font-bold text-background transition-colors hover:bg-accent disabled:opacity-50" type="submit" disabled={!isSupabaseConfigured()}>Create workspace</button>
+        <button className="mt-1 min-h-14 rounded-[4px] bg-foreground px-5 text-sm font-bold text-background shadow-[0_12px_30px_rgba(16,17,15,.12)] hover:-translate-y-0.5 hover:bg-accent disabled:opacity-50" type="submit" disabled={!isSupabaseConfigured()}>Create workspace <span className="ml-2" aria-hidden="true">→</span></button>
       </form>
     </AuthShell>
   );
